@@ -1,11 +1,15 @@
 export async function fetchWeather() {
   try {
     const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=18.52&longitude=73.86&current_weather=true');
+    if (!res.ok) {
+      if (res.status === 429) console.warn("Open-Meteo API Rate Limited (429). Using fallback weather data.");
+      return { temperature: 31.5, windspeed: 12.0, weathercode: 1 };
+    }
     const data = await res.json();
     return data.current_weather; // returns { temperature, windspeed, weathercode, etc. }
   } catch (error) {
     console.error("Error fetching weather:", error);
-    return null;
+    return { temperature: 31.5, windspeed: 12.0, weathercode: 1 }; // Fallback to prevent app breaking
   }
 }
 

@@ -8,6 +8,15 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     define: {
       'process.env.HF_TOKEN': JSON.stringify(env.HF_TOKEN)
+    },
+    server: {
+      proxy: {
+        '/api/randomuser': {
+          target: 'https://randomuser.me/api',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api\/randomuser/, '')
+        }
+      }
     }
   }
 })

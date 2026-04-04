@@ -30,7 +30,7 @@ export async function fetchCurrency() {
 
 export async function fetchCitizen() {
   try {
-    const res = await fetch('https://randomuser.me/api/');
+    const res = await fetch('/api/randomuser/');
     const data = await res.json();
     const user = data.results[0];
     return {

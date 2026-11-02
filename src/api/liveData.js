@@ -1,11 +1,16 @@
 import { createFetcher, HttpError, TimeoutError } from '@avkashhhh/smart-fetch';
 
+const onRetryLog = (service) => (error, attempt, delayMs) => {
+  console.warn(`[smart-fetch] Retrying ${service} request after ${delayMs}ms (attempt ${attempt}):`, error);
+};
+
 // Preconfigured fetcher instances using @avkashhhh/smart-fetch
 const weatherFetcher = createFetcher({
   baseURL: 'https://api.open-meteo.com/v1',
   timeout: 5000,
   retries: 2,
   cacheTTL: 5 * 60 * 1000, // 5 minutes cache
+  onRetry: onRetryLog('Weather'),
 });
 
 const currencyFetcher = createFetcher({
@@ -13,12 +18,14 @@ const currencyFetcher = createFetcher({
   timeout: 5000,
   retries: 2,
   cacheTTL: 10 * 60 * 1000, // 10 minutes cache
+  onRetry: onRetryLog('Currency'),
 });
 
 const citizenFetcher = createFetcher({
   timeout: 5000,
   retries: 2,
   cacheTTL: 60 * 1000, // 1 minute cache
+  onRetry: onRetryLog('Citizen'),
 });
 
 const factFetcher = createFetcher({
@@ -26,6 +33,7 @@ const factFetcher = createFetcher({
   timeout: 5000,
   retries: 2,
   cacheTTL: 60 * 1000, // 1 minute cache
+  onRetry: onRetryLog('Fact'),
 });
 
 export { HttpError, TimeoutError };

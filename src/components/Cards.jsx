@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cloud, DollarSign, User, Lightbulb, RefreshCw } from 'lucide-react';
+import { Cloud, DollarSign, User, Lightbulb, RefreshCw, AlertCircle } from 'lucide-react';
 
 export const DashboardCard = ({ title, icon, onRefresh, isRefreshing, children }) => {
   return (
@@ -25,10 +25,19 @@ export const DashboardCard = ({ title, icon, onRefresh, isRefreshing, children }
   );
 };
 
-export const WeatherCard = ({ data, onRefresh, isRefreshing }) => {
+const ErrorDisplay = ({ message }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#f87171', padding: '0.5rem 0' }}>
+    <AlertCircle size={18} style={{ flexShrink: 0 }} />
+    <span style={{ fontSize: '0.875rem', lineHeight: '1.4' }}>{message}</span>
+  </div>
+);
+
+export const WeatherCard = ({ data, error, onRefresh, isRefreshing }) => {
   return (
     <DashboardCard title="Live Weather" icon={<Cloud size={20} color="#60a5fa" />} onRefresh={onRefresh} isRefreshing={isRefreshing}>
-      {!data ? (
+      {error ? (
+        <ErrorDisplay message={error} />
+      ) : !data ? (
         <div className="loading-skeleton"></div>
       ) : (
         <>
@@ -42,10 +51,12 @@ export const WeatherCard = ({ data, onRefresh, isRefreshing }) => {
   );
 };
 
-export const CurrencyCard = ({ data, onRefresh, isRefreshing }) => {
+export const CurrencyCard = ({ data, error, onRefresh, isRefreshing }) => {
   return (
     <DashboardCard title="Currency Rates" icon={<DollarSign size={20} color="#34d399" />} onRefresh={onRefresh} isRefreshing={isRefreshing}>
-      {!data ? (
+      {error ? (
+        <ErrorDisplay message={error} />
+      ) : !data ? (
         <div className="loading-skeleton"></div>
       ) : (
         <>
@@ -59,10 +70,12 @@ export const CurrencyCard = ({ data, onRefresh, isRefreshing }) => {
   );
 };
 
-export const CitizenCard = ({ data, onRefresh, isRefreshing }) => {
+export const CitizenCard = ({ data, error, onRefresh, isRefreshing }) => {
   return (
     <DashboardCard title="Citizen Profile" icon={<User size={20} color="#f472b6" />} onRefresh={onRefresh} isRefreshing={isRefreshing}>
-      {!data ? (
+      {error ? (
+        <ErrorDisplay message={error} />
+      ) : !data ? (
         <div className="loading-skeleton"></div>
       ) : (
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -82,10 +95,12 @@ export const CitizenCard = ({ data, onRefresh, isRefreshing }) => {
   );
 };
 
-export const FactCard = ({ data, onRefresh, isRefreshing }) => {
+export const FactCard = ({ data, error, onRefresh, isRefreshing }) => {
   return (
     <DashboardCard title="City Fact of the Day" icon={<Lightbulb size={20} color="#fbbf24" />} onRefresh={onRefresh} isRefreshing={isRefreshing}>
-      {!data ? (
+      {error ? (
+        <ErrorDisplay message={error} />
+      ) : !data ? (
         <div className="loading-skeleton"></div>
       ) : (
         <div className="data-value" style={{ fontSize: '1.1rem', lineHeight: '1.5', fontWeight: '400', fontStyle: 'italic' }}>

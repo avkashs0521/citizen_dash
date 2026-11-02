@@ -1,63 +1,83 @@
-export async function fetchWeather() {
-  try {
-    const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=18.52&longitude=73.86&current_weather=true');
-    if (!res.ok) {
-      if (res.status === 429) console.warn("Open-Meteo API Rate Limited (429). Using fallback weather data.");
-      return { temperature: 31.5, windspeed: 12.0, weathercode: 1 };
-    }
-    const data = await res.json();
-    return data.current_weather; // returns { temperature, windspeed, weathercode, etc. }
-  } catch (error) {
-    console.error("Error fetching weather:", error);
-    return { temperature: 31.5, windspeed: 12.0, weathercode: 1 }; // Fallback to prevent app breaking
+import { createFetcher, HttpError, TimeoutError } from '@avkashhhh/smart-fetch';
+
+// Preconfigured fetcher instances using @avkashhhh/smart-fetch
+const weatherFetcher = createFetcher({
+  baseURL: 'https://api.open-meteo.com/v1',
+  timeout: 5000,
+  retries: 2,
+  cacheTTL: 5 * 60 * 1000, // 5 minutes cache
+});
+
+const currencyFetcher = createFetcher({
+  baseURL: 'https://open.er-api.com/v6',
+  timeout: 5000,
+  retries: 2,
+  cacheTTL: 10 * 60 * 1000, // 10 minutes cache
+});
+
+const citizenFetcher = createFetcher({
+  timeout: 5000,
+  retries: 2,
+  cacheTTL: 60 * 1000, // 1 minute cache
+});
+
+const factFetcher = createFetcher({
+  baseURL: 'https://uselessfacts.jsph.pl/api/v2',
+  timeout: 5000,
+  retries: 2,
+  cacheTTL: 60 * 1000, // 1 minute cache
+});
+
+export { HttpError, TimeoutError };
+
+/**
+ * Returns a human-friendly error message for smart-fetch and network errors.
+ *
+ * @param {Error} error
+ * @returns {string}
+ */
+export function getFriendlyErrorMessage(error) {
+  if (error instanceof TimeoutError) {
+    return 'Request timed out. Please check your connection and refresh.';
   }
+  if (error instanceof HttpError) {
+    if (error.status === 429) {
+      return 'Rate limit exceeded (429). Please wait a moment and try again.';
+    }
+    return `Server error (${error.status}). Please try again later.`;
+  }
+  return error?.message || 'Failed to load live data. Please try again.';
+}
+
+export async function fetchWeather() {
+  const data = await weatherFetcher.getJSON('/forecast?latitude=18.52&longitude=73.86&current_weather=true');
+  return data.current_weather; // returns { temperature, windspeed, weathercode, etc. }
 }
 
 export async function fetchCurrency() {
-  try {
-    const res = await fetch('https://open.er-api.com/v6/latest/USD');
-    const data = await res.json();
-    // API provides base USD. To get INR to USD/EUR/GBP, we convert based on INR.
-    // data.rates has INR, USD, EUR, GBP relative to 1 USD.
-    // So 1 INR = (1 / data.rates.INR) * data.rates.TARGET
-    const inrRate = data.rates.INR;
-    return {
-      USD: (1 / inrRate * data.rates.USD).toFixed(4),
-      EUR: (1 / inrRate * data.rates.EUR).toFixed(4),
-      GBP: (1 / inrRate * data.rates.GBP).toFixed(4)
-    };
-  } catch (error) {
-    console.error("Error fetching currency:", error);
-    return null;
-  }
+  const data = await currencyFetcher.getJSON('/latest/USD');
+  const inrRate = data.rates.INR;
+  return {
+    USD: (1 / inrRate * data.rates.USD).toFixed(4),
+    EUR: (1 / inrRate * data.rates.EUR).toFixed(4),
+    GBP: (1 / inrRate * data.rates.GBP).toFixed(4),
+  };
 }
 
 export async function fetchCitizen() {
-  try {
-    const res = await fetch('/api/randomuser/');
-    const data = await res.json();
-    const user = data.results[0];
-    return {
-      name: `${user.name.first} ${user.name.last}`,
-      photo: user.picture.large,
-      email: user.email,
-      city: user.location.city
-    };
-  } catch (error) {
-    console.error("Error fetching citizen:", error);
-    return null;
-  }
+  const data = await citizenFetcher.getJSON('/api/randomuser/');
+  const user = data.results[0];
+  return {
+    name: `${user.name.first} ${user.name.last}`,
+    photo: user.picture.large,
+    email: user.email,
+    city: user.location.city,
+  };
 }
 
 export async function fetchFact() {
-  try {
-    const res = await fetch('https://uselessfacts.jsph.pl/api/v2/facts/random?language=en');
-    const data = await res.json();
-    return {
-      text: data.text
-    };
-  } catch (error) {
-    console.error("Error fetching fact:", error);
-    return null;
-  }
+  const data = await factFetcher.getJSON('/facts/random?language=en');
+  return {
+    text: data.text,
+  };
 }

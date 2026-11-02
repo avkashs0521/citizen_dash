@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Loader2 } from 'lucide-react';
-import { queryHF } from '../api/huggingFace';
+import { queryHF, HttpError, TimeoutError } from '../api/huggingFace';
 
 export default function Chatbot({ dashboardData }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -95,7 +95,13 @@ export default function Chatbot({ dashboardData }) {
       setMessages(prev => [...prev, { role: 'assistant', content: assistantReply }]);
     } catch (error) {
       console.error(error);
-      setMessages(prev => [...prev, { role: 'assistant', content: "An error occurred while fetching my response. Please try again later. Verify the HF_TOKEN environment variable." }]);
+      let assistantError = "An error occurred while fetching my response. Please try again later. Verify the HF_TOKEN environment variable.";
+      if (error instanceof TimeoutError) {
+        assistantError = "Request timed out while contacting the smart city assistant. Please try again.";
+      } else if (error instanceof HttpError) {
+        assistantError = `Assistant service returned error HTTP ${error.status}. Please try again later.`;
+      }
+      setMessages(prev => [...prev, { role: 'assistant', content: assistantError }]);
     } finally {
       setIsLoading(false);
     }
